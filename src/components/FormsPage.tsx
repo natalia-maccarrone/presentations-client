@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -23,40 +24,64 @@ function FormsPage() {
   const [presentations, setPresentations] = useState<Presentation[]>([]);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
 
+  const presentationService = usePresentationService();
+  const attendeeService = useAttendeeService();
+
   useEffect(() => {
     getAllPresentations();
     getAllAttendees();
   }, []);
 
   const getAllPresentations = async () => {
-    const presentations = await presentationService.getAll();
-    setPresentations(presentations);
+    try {
+      const presentations = await presentationService.getAll();
+      setPresentations(presentations);
+    } catch (error: any) {
+      toast(error.response.data.Error);
+    }
   };
 
   const getAllAttendees = async () => {
-    const attendees = await attendeeService.getAll();
-    setAttendees(attendees);
+    try {
+      const attendees = await attendeeService.getAll();
+      setAttendees(attendees);
+    } catch (error: any) {
+      toast(error.response.data.Error);
+    }
   };
 
-  const presentationService = usePresentationService();
-  const attendeeService = useAttendeeService();
-
   const handleOnSubmitPresentation = async (data: PresentationPayload) => {
-    await presentationService.create(data);
-    getAllPresentations();
+    try {
+      await presentationService.create(data);
+      getAllPresentations();
+    } catch (error: any) {
+      toast(error.response.data.Error);
+    }
   };
 
   const handleOnSubmitAttendee = async (data: AttendeePayload) => {
-    await attendeeService.create(data);
-    getAllAttendees();
+    try {
+      await attendeeService.create(data);
+      getAllAttendees();
+    } catch (error: any) {
+      toast(error.response.data.Error);
+    }
   };
 
   const handleAddAttendee = async (
     presentationId: string,
     attendeeId: string
   ) => {
-    await presentationService.addToPresentation(presentationId, attendeeId);
-    getAllPresentations();
+    try {
+      if (!presentationId || !attendeeId) {
+        throw new Error("Missing presentation or attendee");
+      }
+      await presentationService.addToPresentation(presentationId, attendeeId);
+      getAllPresentations();
+    } catch (error: any) {
+      console.log(error);
+      toast(error.message);
+    }
   };
 
   return (
@@ -91,6 +116,7 @@ function FormsPage() {
       <Row>
         <Presentations presentations={presentations} />
       </Row>
+      <Toaster />
     </Container>
   );
 }
